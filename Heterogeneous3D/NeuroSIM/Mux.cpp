@@ -61,8 +61,8 @@ void Mux::Initialize(int _numInput, int _numSelection, double _resTg, bool _FPGA
 		widthTgN = MIN_NMOS_SIZE * tech.featureSize;
 		widthTgP = tech.pnSizeRatio * MIN_NMOS_SIZE * tech.featureSize;
 		EnlargeSize(&widthTgN, &widthTgP, tech.featureSize*MAX_TRANSISTOR_HEIGHT, tech);
-		resTg = 1 / (1/CalculateOnResistance(widthTgN, NMOS, 300, tech) 
-					+ 1/CalculateOnResistance(widthTgP, PMOS, 300, tech));
+		resTg = 1 / (1/CalculateOnResistance(widthTgN, NMOS, 300, tech)/LINEAR_REGION_RATIO 
+					+ 1/CalculateOnResistance(widthTgP, PMOS, 300, tech)/LINEAR_REGION_RATIO);
 	} else {
 		resTg = _resTg * IR_DROP_TOLERANCE;
 		widthTgN = CalculateOnResistance(tech.featureSize, NMOS, 300, tech)
@@ -70,8 +70,8 @@ void Mux::Initialize(int _numInput, int _numSelection, double _resTg, bool _FPGA
 		widthTgP = CalculateOnResistance(tech.featureSize, PMOS, 300, tech)
 								* tech.featureSize * LINEAR_REGION_RATIO/ (resTg*2);
 		EnlargeSize(&widthTgN, &widthTgP, tech.featureSize*MAX_TRANSISTOR_HEIGHT, tech);
-		resTg = 1 / (1/CalculateOnResistance(widthTgN, NMOS, 300, tech) 
-					+ 1/CalculateOnResistance(widthTgP, PMOS, 300, tech));
+		resTg = 1 / (1/CalculateOnResistance(widthTgN, NMOS, 300, tech)/LINEAR_REGION_RATIO 
+					+ 1/CalculateOnResistance(widthTgP, PMOS, 300, tech)/LINEAR_REGION_RATIO);
 	}
 	initialized = true;
 }
