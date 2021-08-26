@@ -865,6 +865,7 @@ double ChipCalculatePerformance(InputParameter& inputParameter, Technology& tech
 
 		*leakage = tileLeakage;
 	}
+	return 0;
 }
 
 
