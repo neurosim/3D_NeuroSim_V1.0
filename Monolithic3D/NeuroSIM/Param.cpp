@@ -121,7 +121,7 @@ Param::Param() {
 	
 	/*** conventional hardware design options ***/
 	clkFreq = 1e9;                      // Clock frequency
-	// temp = 300;                         // Temperature (K)
+	temp = 300;                         // Temperature (K)
 	// technode: 130	 --> wireWidth: 175
 	// technode: 90		 --> wireWidth: 110
 	// technode: 65      --> wireWidth: 105
