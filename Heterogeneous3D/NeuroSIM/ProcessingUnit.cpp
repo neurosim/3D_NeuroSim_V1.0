@@ -128,7 +128,7 @@ void ProcessingUnitInitialize(SubArray *& subArray, InputParameter& inputParamet
 		bufferInputCM = new DFF(inputParameter, tech, cell);
 		bufferOutputCM = new DFF(inputParameter, tech, cell);
 	}
-		
+	
 	/* Create SubArray object and link the required global objects (not initialization) */
 	inputParameter.temperature = param->temp;   // Temperature (K)
 	inputParameter.processNode = param->technode;    // Technology node
@@ -199,37 +199,38 @@ void ProcessingUnitInitialize(SubArray *& subArray, InputParameter& inputParamet
 	int numSubArrayColNM = _numSubArrayColNM;
 	int numSubArrayRowCM = _numSubArrayRowCM;
 	int numSubArrayColCM = _numSubArrayColCM;
+
 	/*** initialize modules ***/
 	subArray->Initialize(numRow, numCol, param->unitLengthWireResistance);        // initialize subArray
 	subArray->CalculateArea();
 	if (param->novelMapping) {
 		if (param->parallelRead) {
-			adderTreeNM->Initialize(numSubArrayRowNM, log2((double)param->levelOutput)+param->numBitInput+1, ceil((double)numSubArrayColNM*(double)numCol/(double)param->numColMuxed), param->clkFreq);
+			adderTreeNM->Initialize(numSubArrayRowNM, log2((double)param->levelOutput)+param->numBitInput+param->numColPerSynapse+1, ceil((double)numSubArrayColNM*(double)numCol/(double)param->numColMuxed), param->clkFreq);
 		} else {
-			adderTreeNM->Initialize(numSubArrayRowNM, (log2((double)numRow)+param->cellBit-1)+param->numBitInput+1, ceil((double)numSubArrayColNM*(double)numCol/(double)param->numColMuxed), param->clkFreq);
+			adderTreeNM->Initialize(numSubArrayRowNM, (log2((double)numRow)+param->cellBit-1)+param->numBitInput+param->numColPerSynapse+1, ceil((double)numSubArrayColNM*(double)numCol/(double)param->numColMuxed), param->clkFreq);
 		}
 		
 		bufferInputNM->Initialize(param->numBitInput*numRow, param->clkFreq);
 		if (param->parallelRead) {
-			bufferOutputNM->Initialize((numCol/param->numColMuxed)*(log2((double)param->levelOutput)+param->numBitInput+adderTreeNM->numStage), param->clkFreq);
+			bufferOutputNM->Initialize((numCol/param->numColMuxed)*(log2((double)param->levelOutput)+param->numBitInput+param->numColPerSynapse+adderTreeNM->numStage), param->clkFreq);
 		} else {
-			bufferOutputNM->Initialize((numCol/param->numColMuxed)*((log2((double)numRow)+param->cellBit-1)+param->numBitInput+adderTreeNM->numStage), param->clkFreq);
+			bufferOutputNM->Initialize((numCol/param->numColMuxed)*((log2((double)numRow)+param->cellBit-1)+param->numBitInput+param->numColPerSynapse+adderTreeNM->numStage), param->clkFreq);
 		}
 		
 		busInputNM->Initialize(HORIZONTAL, numSubArrayRowNM, numSubArrayColNM, 0, numRow, subArray->height, subArray->width, param->clkFreq);
 		busOutputNM->Initialize(VERTICAL, numSubArrayRowNM, numSubArrayColNM, 0, numCol, subArray->height, subArray->width, param->clkFreq);
 	}
 	if (param->parallelRead) {
-		adderTreeCM->Initialize(numSubArrayRowCM, log2((double)param->levelOutput)+param->numBitInput+1, ceil((double)numSubArrayColCM*(double)numCol/(double)param->numColMuxed), param->clkFreq);
+		adderTreeCM->Initialize(numSubArrayRowCM, log2((double)param->levelOutput)+param->numBitInput+param->numColPerSynapse+1, ceil((double)numSubArrayColCM*(double)numCol/(double)param->numColMuxed), param->clkFreq);
 	} else {
-		adderTreeCM->Initialize(numSubArrayRowCM, (log2((double)numRow)+param->cellBit-1)+param->numBitInput+1, ceil((double)numSubArrayColCM*(double)numCol/(double)param->numColMuxed), param->clkFreq);
+		adderTreeCM->Initialize(numSubArrayRowCM, (log2((double)numRow)+param->cellBit-1)+param->numBitInput+param->numColPerSynapse+1, ceil((double)numSubArrayColCM*(double)numCol/(double)param->numColMuxed), param->clkFreq);
 	}
 	
 	bufferInputCM->Initialize(param->numBitInput*numRow, param->clkFreq);
 	if (param->parallelRead) {
-		bufferOutputCM->Initialize((numCol/param->numColMuxed)*(log2((double)param->levelOutput)+param->numBitInput+adderTreeCM->numStage), param->clkFreq);
+		bufferOutputCM->Initialize((numCol/param->numColMuxed)*(log2((double)param->levelOutput)+param->numBitInput+param->numColPerSynapse+adderTreeCM->numStage), param->clkFreq);
 	} else {
-		bufferOutputCM->Initialize((numCol/param->numColMuxed)*((log2((double)numRow)+param->cellBit-1)+param->numBitInput+adderTreeCM->numStage), param->clkFreq);
+		bufferOutputCM->Initialize((numCol/param->numColMuxed)*((log2((double)numRow)+param->cellBit-1)+param->numBitInput+param->numColPerSynapse+adderTreeCM->numStage), param->clkFreq);
 	}
 	
 	busInputCM->Initialize(HORIZONTAL, numSubArrayRowCM, numSubArrayColCM, 0, numRow, subArray->height, subArray->width, param->clkFreq);
@@ -369,8 +370,8 @@ double ProcessingUnitCalculatePerformance(SubArray *subArray, const vector<vecto
 							}
 						}
 						if (NMpe) {
-							adderTreeNM->CalculateLatency((int)(numInVector/param->numBitInput)*param->numColMuxed, ceil((double) weightMatrixRow/(double) param->numRowSubArray), 0);
-							adderTreeNM->CalculatePower((int)(numInVector/param->numBitInput)*param->numColMuxed, ceil((double) weightMatrixRow/(double) param->numRowSubArray));
+							adderTreeNM->CalculateLatency((int)(numInVector/param->numBitInput)*ceil(param->numColMuxed/param->numColPerSynapse), ceil((double) weightMatrixRow/(double) param->numRowSubArray), 0);
+							adderTreeNM->CalculatePower((int)(numInVector/param->numBitInput)*ceil(param->numColMuxed/param->numColPerSynapse), ceil((double) weightMatrixRow/(double) param->numRowSubArray));
 							*readLatency = MAX(subArrayReadLatency + adderTreeNM->readLatency, (*readLatency));
 							*readDynamicEnergy += adderTreeNM->readDynamicEnergy;
 							*coreLatencyADC = MAX(subArrayLatencyADC, (*coreLatencyADC));
@@ -378,8 +379,8 @@ double ProcessingUnitCalculatePerformance(SubArray *subArray, const vector<vecto
 							*coreLatencyOther = MAX(subArrayLatencyOther, (*coreLatencyOther));
 							*coreEnergyAccum += adderTreeNM->readDynamicEnergy;
 						} else {
-							adderTreeCM->CalculateLatency((int)(numInVector/param->numBitInput)*param->numColMuxed, ceil((double) weightMatrixRow/(double) param->numRowSubArray), 0);
-							adderTreeCM->CalculatePower((int)(numInVector/param->numBitInput)*param->numColMuxed, ceil((double) weightMatrixRow/(double) param->numRowSubArray));
+							adderTreeCM->CalculateLatency((int)(numInVector/param->numBitInput)*ceil(param->numColMuxed/param->numColPerSynapse), ceil((double) weightMatrixRow/(double) param->numRowSubArray), 0);
+							adderTreeCM->CalculatePower((int)(numInVector/param->numBitInput)*ceil(param->numColMuxed/param->numColPerSynapse), ceil((double) weightMatrixRow/(double) param->numRowSubArray));
 							*readLatency = MAX(subArrayReadLatency + adderTreeCM->readLatency, (*readLatency));
 							*readDynamicEnergy += adderTreeCM->readDynamicEnergy;
 							*coreLatencyADC = MAX(subArrayLatencyADC, (*coreLatencyADC));
@@ -512,15 +513,15 @@ double ProcessingUnitCalculatePerformance(SubArray *subArray, const vector<vecto
 			}
 		}
 		if (NMpe) {
-			adderTreeNM->CalculateLatency((int)(numInVector/param->numBitInput)*param->numColMuxed, ceil((double) weightMatrixRow/(double) param->numRowSubArray), 0);
-			adderTreeNM->CalculatePower((int)(numInVector/param->numBitInput)*param->numColMuxed, ceil((double) weightMatrixRow/(double) param->numRowSubArray));
+			adderTreeNM->CalculateLatency((int)(numInVector/param->numBitInput)*ceil(param->numColMuxed/param->numColPerSynapse), ceil((double) weightMatrixRow/(double) param->numRowSubArray), 0);
+			adderTreeNM->CalculatePower((int)(numInVector/param->numBitInput)*ceil(param->numColMuxed/param->numColPerSynapse), ceil((double) weightMatrixRow/(double) param->numRowSubArray));
 			*readLatency += adderTreeNM->readLatency;
 			*coreLatencyAccum += adderTreeNM->readLatency;
 			*readDynamicEnergy += adderTreeNM->readDynamicEnergy;
 			*coreEnergyAccum += adderTreeNM->readDynamicEnergy;
 		} else {
-			adderTreeCM->CalculateLatency((int)(numInVector/param->numBitInput)*param->numColMuxed, ceil((double) weightMatrixRow/(double) param->numRowSubArray), 0);
-			adderTreeCM->CalculatePower((int)(numInVector/param->numBitInput)*param->numColMuxed, ceil((double) weightMatrixRow/(double) param->numRowSubArray));
+			adderTreeCM->CalculateLatency((int)(numInVector/param->numBitInput)*ceil(param->numColMuxed/param->numColPerSynapse), ceil((double) weightMatrixRow/(double) param->numRowSubArray), 0);
+			adderTreeCM->CalculatePower((int)(numInVector/param->numBitInput)*ceil(param->numColMuxed/param->numColPerSynapse), ceil((double) weightMatrixRow/(double) param->numRowSubArray));
 			*readLatency += adderTreeCM->readLatency;
 			*coreLatencyAccum += adderTreeCM->readLatency;
 			*readDynamicEnergy += adderTreeCM->readDynamicEnergy;
